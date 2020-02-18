@@ -56,16 +56,23 @@ exports.createBootcamp= async (req,res,next)=>
 // update 
 exports.updatebootcamp= async (req,res,next)=>
 {
+   try {
+       
     const bootcamp = await Bootcamp.findByIdAndUpdate(req.params.id,req.body,{
         new :true,
         runValidators:true 
     })
+
     if(!bootcamp){
-        return res.status(400).json({success :false})
+        return next(new ErrorResponse(`bootcamp id of ${req.params.id}`,404))
+        
     }
 
-    res.status(200).json({success:true ,data : bootcamp})
-    
+   } catch (error) {
+     next(err)  
+   }
+   
+  
 }
 //delete
 exports.deletbootcamp= async (req,res,next)=>
@@ -75,9 +82,14 @@ exports.deletbootcamp= async (req,res,next)=>
       
         res.status(200).json({success:true ,data :{} })
 
+        if(!bootcamp){
+            return next(new ErrorResponse(`bootcamp id of ${req.params.id}`,404))
+            
+        }
+
     } 
     catch (error) {
-        return res.status(400).json({status :false})
+        next(err)
     }
 
 }
