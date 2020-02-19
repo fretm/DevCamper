@@ -1,27 +1,25 @@
 const ErrorResponse = require('../util/err_respons')
+const asyncHandler = require ('../middleware/async')
+const geocoder = require('../util/geocoder')
 const Bootcamp = require('../models/Bootcamps')
 //@desc get all the bootcamps 
-//@route get request/api/v1/bootcamps
+//@route get req=uest/api/v1/bootcamps
 //@acess pu
-exports.getbootcamps= async (req,res,next)=>
+exports.getbootcamps=  asyncHandler (async (req,res,next)=>
 {
-    try {
+   
        
        const bootcamps = await Bootcamp.find(); 
        res.status(200).json({sucess:true,count : bootcamps.length,  data:bootcamps})
-    } catch (error) {
-       next(error)
-    }
-   
-}
+    })
 
 
 //@desc get all the bootcamps
 //@route get request/api/v1/bootcamps:id
 //@acess public
-exports.getbootcamp= async (req,res, next)=>
+exports.getbootcamp=  asyncHandler (async (req,res, next)=>
 {
-    try {
+    
         const bootcamp = await Bootcamp.findById(req.params.id);
 
         if(!bootcamp){
@@ -30,33 +28,26 @@ exports.getbootcamp= async (req,res, next)=>
 
         res.status(200).json({sucess:true , data: bootcamp})
 
-    } catch (err) {
-        next(err)
-            
-    }
-};
+    })
+
 
 //creat bootcamp methd
 //@desc post request
 //@routes post/api/v1/bootcamps:id
 //private 
-exports.createBootcamp= async (req,res,next)=>
+exports.createBootcamp= asyncHandler( async (req,res,next)=>
 {
-    try {
+    
         const bootcamp= await Bootcamp.create(req.body);
   res.status(201).json({
       sucess: true ,
       data:bootcamp,
   });
-    } catch (error) {
-     next(error)  
-    }
   
-};
+});
 // update 
-exports.updatebootcamp= async (req,res,next)=>
+exports.updatebootcamp=asyncHandler( async (req,res,next)=>
 {
-   try {
        
     const bootcamp = await Bootcamp.findByIdAndUpdate(req.params.id,req.body,{
         new :true,
@@ -68,16 +59,13 @@ exports.updatebootcamp= async (req,res,next)=>
         
     }
 
-   } catch (error) {
-     next(err)  
-   }
+   } )
    
   
-}
+
 //delete
-exports.deletbootcamp= async (req,res,next)=>
+exports.deletbootcamp=asyncHandler ( async (req,res,next)=>
 {
-    try {
         const bootcamp = await Bootcamp.findByIdAndDelete(req.params.id);
       
         res.status(200).json({success:true ,data :{} })
@@ -87,12 +75,37 @@ exports.deletbootcamp= async (req,res,next)=>
             
         }
 
-    } 
-    catch (error) {
-        next(err)
-    }
-
-}
+    } )
+   
 
 
+//get bootcamp within a radius 
+//@routes GET/api/v1/bootcamps/radius/:zipcode/distance
+//private 
+exports.getbootcampsInradius= asyncHandler( async (req,res,next)=>
+{
+     
+    const {zipcode ,distance}=req.params;
+
+    //get  lat/lang from geocoder 
+ const loc= await geocoder.geocode(zipcode);
+ const lat = loc[0].latitude;
+ const lng= loc[0].longitude
+ 
+ //calculate radius  using radians;
+ //divide distance by radius of earth 
+ //earth radius = 3,963;
+
+ const radius = distance / 3963;
+
+ const bootcamps =  await Bootcamp.find({
+     location:{$geoWithin: { $centerSphere : [[lng ,lat],radius]}}
+ })
+
+  res.status(200).json({
+      success:true,
+      count : bootcamps.length,
+      data :bootcamps
+  })
+  });
 
