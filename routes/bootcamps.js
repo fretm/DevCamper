@@ -24,3 +24,18 @@ router.route('/:id').get(getbootcamp)
 
 
 module.exports=router
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
